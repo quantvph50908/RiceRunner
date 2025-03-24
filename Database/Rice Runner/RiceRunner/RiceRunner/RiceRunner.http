@@ -1,0 +1,6 @@
+@RiceRunner_HostAddress = http://localhost:5207
+
+GET {{RiceRunner_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
