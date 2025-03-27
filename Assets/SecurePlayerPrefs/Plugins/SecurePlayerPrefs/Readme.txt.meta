@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: bd051af889c25e942971838f44d07c70
+labels:
+- PlayerPrefs
+- SecurePlayerPrefs
+- Security
+- Encryption
+- Decryption
+timeCreated: 1429559620
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35160
+  packageName: SecurePlayerPrefs
+  packageVersion: 1
+  assetPath: Assets/SecurePlayerPrefs/Plugins/SecurePlayerPrefs/Readme.txt
+  uploadId: 60245

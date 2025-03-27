@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RiceRunner.Data;
 using RiceRunner.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace RiceRunner.Controllers
 {
@@ -17,20 +17,22 @@ namespace RiceRunner.Controllers
         }
 
         [HttpGet("{userId}")]
-        public IActionResult GetInventory(int userId)
+        public async Task<IActionResult> GetInventory(int userId)
         {
-            var items = _context.Inventory.Where(i => i.UserId == userId).ToList();
+            var items = await _context.Inventory
+                .Where(i => i.UserId == userId)
+                .ToListAsync();
             return Ok(items);
         }
 
         [HttpPost("add")]
-        public IActionResult AddItem([FromBody] InventoryItem item)
+        public async Task<IActionResult> AddItem([FromBody] InventoryItem item)
         {
             if (string.IsNullOrEmpty(item.ItemName) || item.UserId <= 0)
-                return BadRequest("Dữ liệu không hợp lệ");
+                return BadRequest(new { message = "Dữ liệu không hợp lệ" });
 
-            var existingItem = _context.Inventory
-                .FirstOrDefault(i => i.UserId == item.UserId && i.ItemName == item.ItemName);
+            var existingItem = await _context.Inventory
+                .FirstOrDefaultAsync(i => i.UserId == item.UserId && i.ItemName == item.ItemName);
 
             if (existingItem != null)
             {
@@ -40,8 +42,8 @@ namespace RiceRunner.Controllers
             {
                 _context.Inventory.Add(item);
             }
-            _context.SaveChanges();
-            return Ok("Thêm vật phẩm thành công");
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Thêm vật phẩm thành công" });
         }
     }
 }

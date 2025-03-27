@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 8514d63b11afe7d4c97cd9b8c481602f
+labels:
+- PlayerPrefs
+- SecurePlayerPrefs
+- Security
+- Encryption
+- Decryption
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35160
+  packageName: SecurePlayerPrefs
+  packageVersion: 1
+  assetPath: Assets/SecurePlayerPrefs/Plugins/SecurePlayerPrefs/SecurePlayerPrefs.cs
+  uploadId: 60245

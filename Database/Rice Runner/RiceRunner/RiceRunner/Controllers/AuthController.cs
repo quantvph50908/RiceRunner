@@ -3,6 +3,8 @@ using RiceRunner.Data;
 using RiceRunner.Models;
 using System.Text.RegularExpressions;
 using BCrypt.Net;
+using Microsoft.EntityFrameworkCore;
+using RiceRunner.Services;
 
 namespace RiceRunner.Controllers
 {
@@ -11,23 +13,25 @@ namespace RiceRunner.Controllers
     public class AuthController : ControllerBase
     {
         private readonly GameDbContext _context;
+        private readonly EmailService _emailService;
 
-        public AuthController(GameDbContext context)
+        public AuthController(GameDbContext context, EmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] User user)
+        public async Task<IActionResult> Register([FromBody] User user)
         {
             if (user == null)
             {
                 return BadRequest(new { message = "Dữ liệu không hợp lệ" });
             }
 
-            if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.Password))
+            if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.Password) || string.IsNullOrEmpty(user.Email))
             {
-                return BadRequest(new { message = "Username và Password không được để trống" });
+                return BadRequest(new { message = "Username, Password và Email không được để trống" });
             }
 
             if (user.Username.Length < 3)
@@ -48,20 +52,35 @@ namespace RiceRunner.Controllers
                 return BadRequest(new { message = "Password không được chứa khoảng trắng" });
             }
 
-            if (_context.Users.Any(u => u.Username == user.Username))
+            if (!Regex.IsMatch(user.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                return BadRequest(new { message = "Email không hợp lệ" });
+            }
+
+            if (await _context.Users.AnyAsync(u => u.Username == user.Username))
             {
                 return BadRequest(new { message = "Username đã tồn tại" });
             }
+            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
+            {
+                return BadRequest(new { message = "Email đã được sử dụng" });
+            }
 
-            // Mã hóa mật khẩu trước khi lưu
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
             _context.Users.Add(user);
-            _context.SaveChanges();
-            return Ok(new { Message = "Đăng ký thành công", UserId = user.Id });
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                UserId = user.Id,
+                Score = user.Score,
+                Rice = user.Rice,
+                Message = "Đăng ký thành công"
+            });
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] User user)
+        public async Task<IActionResult> Login([FromBody] User user)
         {
             if (user == null)
             {
@@ -73,13 +92,12 @@ namespace RiceRunner.Controllers
                 return BadRequest(new { message = "Username và Password không được để trống" });
             }
 
-            var dbUser = _context.Users.FirstOrDefault(u => u.Username == user.Username);
+            var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
             if (dbUser == null)
             {
                 return Unauthorized(new { message = "Tài khoản không tồn tại" });
             }
 
-            // Kiểm tra mật khẩu đã mã hóa
             if (!BCrypt.Net.BCrypt.Verify(user.Password, dbUser.Password))
             {
                 return Unauthorized(new { message = "Mật khẩu không đúng" });
@@ -92,6 +110,47 @@ namespace RiceRunner.Controllers
                 Rice = dbUser.Rice,
                 Message = "Đăng nhập thành công"
             });
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] object request)
+        {
+            var email = request.GetType().GetProperty("Email")?.GetValue(request)?.ToString();
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest(new { message = "Email không được để trống" });
+            }
+
+            if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                return BadRequest(new { message = "Email không hợp lệ" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                return BadRequest(new { message = "Email không tồn tại" });
+            }
+
+            var newPassword = GenerateRandomPassword();
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync();
+
+            await _emailService.SendEmailAsync(
+                email,
+                "Mật Khẩu Mới - Rice Runner",
+                $"Mật khẩu mới của bạn là: {newPassword}\nVui lòng đăng nhập và đổi mật khẩu để bảo mật tài khoản."
+            );
+
+            return Ok(new { Message = "Mật khẩu mới đã được gửi đến email của bạn" });
+        }
+
+        private string GenerateRandomPassword()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 8)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

@@ -29,6 +29,10 @@ namespace RiceRunner.Data
             modelBuilder.Entity<InventoryItem>()
                 .Property(i => i.Quantity)
                 .HasDefaultValue(1);
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.Email)
+                .IsRequired(); // Đảm bảo Email là bắt buộc
         }
     }
 }

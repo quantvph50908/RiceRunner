@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: c6eeb920653299442b06b0ce71cef829
+labels:
+- PlayerPrefs
+- SecurePlayerPrefs
+- Security
+- Encryption
+- Decryption
+timeCreated: 1429557956
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35160
+  packageName: SecurePlayerPrefs
+  packageVersion: 1
+  assetPath: Assets/SecurePlayerPrefs/Plugins/SecurePlayerPrefs/Demo/DemoScene.unity
+  uploadId: 60245
